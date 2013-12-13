@@ -1,0 +1,22 @@
+{
+  "name": "campus-synergy",
+  "version": "0.0.0",
+  "description": "campus synergy app",
+  "main": "web.js",
+  "scripts": {
+    "test": "echo \"wee\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jamesffielder/campus-synergy.git"
+  },
+  "keywords": [
+    "dfdf"
+  ],
+  "author": "james",
+  "license": "BSD",
+  "dependencies": {
+    "logfmt": "~0.17.0",
+    "express": "~3.4.7"
+  }
+}
