@@ -1,0 +1,81 @@
+.container
+	.page-header
+		h1 Campus Events
+		table
+			tr
+				td
+					button.btn.btn-primary(type='button') List View 
+						span.glyphicon.glyphicon-th-list
+				td
+					button.btn.btn-primary(type='button') Map View 
+						span.glyphicon.glyphicon-map-marker
+
+.row
+	.col-md-1
+	.col-md-10
+		#map-canvas.google-map-canvas
+	.col-md-1
+
+#login.modal.fade(role='dialog')
+	.modal-dialog
+		.modal-content
+			.modal-header
+				h4 Login
+				#loginResult
+			.modal-body
+				.form-horizontal(role='form')
+					.form-group
+						label.col-sm-2.control-label(for='loginEmail') Email
+						.col-sm-10
+							input.form-control#loginEmail(type='email' placeholder='Email')
+					.form-group
+						label.col-sm-2.control-label(for='loginPass') Password
+						.col-sm-10
+							input.form-control#loginPass(type='password' placeholder='Password')
+			.modal-footer
+				button.btn.btn-primary#loginBtn Log in
+				button.btn.btn-default(data-dismiss='modal') Close
+
+#about.modal.fade(role='dialog')
+	.modal-dialog
+		.modal-content
+			.modal-header
+				h4 About
+			.modal-body
+				p This is the Campus Synergy Web application. Find and add events on campus be sure to checkout our mobile apps as well! Android: link, Iphone: link.
+			.modal-footer
+				a.btn.btn-primary(data-dismiss='modal') Close
+
+#signup.modal.fade(role='dialog')
+	.modal-dialog
+		.modal-content
+			.modal-header
+				h4 Sign Up
+				#signupResult
+			.modal-body
+				.form-horizontal(role='form')
+					.form-group
+						label.col-sm-2.control-label(for='signupEmail') Email
+						.col-sm-10
+							input.form-control#signupEmail(type='email' placeholder='Email')
+					.form-group
+						label.col-sm-2.control-label(for='signupPass') Password
+						.col-sm-10
+							input.form-control#signupPass(type='password' placeholder='Password')
+					.form-group
+						label.col-sm-2.control-label(for='vSignupPass') Password
+						.col-sm-10
+							input.form-control#vSignupPass(type='password' placeholder='Password')
+					.form-group
+						label.col-sm-2.control-label(for='orgSignupDescrip') Organization Description
+						.col-sm-10
+							textarea.form-control(rows='3')
+			.modal-footer
+				button.btn.btn-primary#signupBtn Sign Up
+				button.btn.btn-default(data-dismiss='modal') Close
+
+script(src='/jquery/jquery.2.0.3.min.js')
+//API Key from james gmail account
+script(src='https://maps.googleapis.com/maps/api/js?key=AIzaSyCzpJOAcx0wRy-kI-qKyowvruT8ecXs8KY&sensor=true')
+script(src='/custom_js/index.js')
+script(src='/bootstrap/js/bootstrap.min.js')

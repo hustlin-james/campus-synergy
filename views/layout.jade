@@ -1,0 +1,58 @@
+!!! 5
+html(lang="en")
+	head
+		title= title
+		link(rel='stylesheet', href='/bootstrap/css/bootstrap.min.css')
+		link(rel='stylesheet', href='/bootstrap/css/bootstrap-theme.min.css')
+		link(rel='stylesheet', href='/stylesheets/index.css')
+		meta(charset='utf-8')
+		meta(http-equiv='X-UA-Compatible' content='IE=edge')
+		meta(name='viewport' content='width=device-width, initial-scale=1.0')
+
+	body
+		.navbar.navbar-default.navbar-static-top(role='navigation')
+			#notLoggedInNavBar
+				.container
+					.navbar-header
+						button(type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse")
+							span.icon-bar
+							span.icon-bar
+							span.icon-bar
+					a.navbar-brand(href='#') Campus Synergy
+					.navbar-collapse.collapse.navbar-right
+						ul.nav.navbar-nav
+							li.active
+								a(href='#') Home
+							li
+								a(href='#login' data-toggle='modal') Login
+							li 
+								a(href='#signup' data-toggle='modal') Signup
+							li
+								a(href='#about' data-toggle='modal') About
+			#loggedInNavBar
+				.container
+					.navbar-header
+						button(type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse")
+							span.icon-bar
+							span.icon-bar
+							span.icon-bar
+					a.navbar-brand(href='#') Campus Synergy
+					.navbar-collapse.collapse.navbar-right
+						ul.nav.navbar-nav
+							li.active
+								a(href='#') Home
+							li
+								a(href='#addEvent' data-toggle='modal') Add Event
+							li 
+								a(href='#syncCalendars' data-toggle='modal') Sync Calendars
+							li
+								a(href='#logout' data-toggle='modal') Logout
+							li 
+								a(href='#about' data-toggle='modal') About
+
+
+		section#wrapper!= body
+
+		#footer
+			.container
+				p.text-muted &#169; James Feifan Meng Fielder, MOBI
