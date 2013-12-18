@@ -4,16 +4,18 @@
 		table
 			tr
 				td
-					button.btn.btn-primary(type='button') List View 
+					button.btn.btn-primary(type='button')#listViewBtn List View 
 						span.glyphicon.glyphicon-th-list
 				td
-					button.btn.btn-primary(type='button') Map View 
+					button.btn.btn-primary(type='button')#mapViewBtn Map View 
 						span.glyphicon.glyphicon-map-marker
 
 .row
 	.col-md-1
 	.col-md-10
 		#map-canvas.google-map-canvas
+		#listViewDiv
+			p TODO
 	.col-md-1
 
 #login.modal.fade(role='dialog')
@@ -63,19 +65,63 @@
 						.col-sm-10
 							input.form-control#signupPass(type='password' placeholder='Password')
 					.form-group
-						label.col-sm-2.control-label(for='vSignupPass') Password
+						label.col-sm-2.control-label(for='vSignupPass') Verify Password
 						.col-sm-10
 							input.form-control#vSignupPass(type='password' placeholder='Password')
 					.form-group
 						label.col-sm-2.control-label(for='orgSignupDescrip') Organization Description
 						.col-sm-10
-							textarea.form-control(rows='3')
+							textarea#orgSignupDescrip.form-control(rows='3')
 			.modal-footer
 				button.btn.btn-primary#signupBtn Sign Up
+				button.btn.btn-default(data-dismiss='modal') Close
+
+#addEvent.modal.fade(role='dialog')
+	.modal-dialog
+		.modal-content
+			.modal-header
+				h4 Add Event
+				#addEventResult
+			.modal-body
+				.form-horizontal(role='form')
+					.form-group
+						label.col-sm-2.control-label(for='eventTitle') Event Title
+						.col-sm-10
+							input.form-control#eventTitle(type='text' placeholder='Event Title')
+					.form-group
+						label.col-sm-2.control-label(for='eventDescription') Event Description
+						.col-sm-10
+							textarea#eventDescription.form-control(rows=3)
+					.form-group
+						label.col-sm-2.control-label(for='eventBuilding') Event Building
+						.col-sm-10
+							select.form-control#eventBuilding
+								- each building in buildingsJson
+									option= building.name
+					.form-group
+						label.col-sm-2.control-label(for='roomNumber') Room Number
+						.col-sm-10
+							input.form-control#roomNumber(type='text' placeholder='Room Number')
+			.modal-footer
+				button.btn.btn-primary#addEventBtn Add Event
+				button.btn.btn-default(data-dismiss='modal') Close
+
+#syncCalendars.modal.fade(role='dialog')
+	.modal-dialog
+		.modal-content
+			.modal-header
+				h4 Sync Calendars
+				#syncCalendarResult
+			.modal-body
+				p TODO
+			.modal-footer
+				button.btn.btn-primary#SyncCalendarsBtn Sync Calendars
 				button.btn.btn-default(data-dismiss='modal') Close
 
 script(src='/jquery/jquery.2.0.3.min.js')
 //API Key from james gmail account
 script(src='https://maps.googleapis.com/maps/api/js?key=AIzaSyCzpJOAcx0wRy-kI-qKyowvruT8ecXs8KY&sensor=true')
+script(src='http://www.parsecdn.com/js/parse-1.2.14.min.js')
 script(src='/custom_js/index.js')
 script(src='/bootstrap/js/bootstrap.min.js')
+
