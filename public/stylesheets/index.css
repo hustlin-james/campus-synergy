@@ -9,3 +9,5 @@ html,body,.row,.col-md-10, #wrapper{
   height: 60px;
   background-color: #f5f5f5;
 }
+.datepicker{z-index:1151;}
+.datepicker.dropdown-menu {z-index:1151;}

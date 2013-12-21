@@ -5,6 +5,7 @@ html(lang="en")
 		link(rel='stylesheet', href='/bootstrap/css/bootstrap.min.css')
 		link(rel='stylesheet', href='/bootstrap/css/bootstrap-theme.min.css')
 		link(rel='stylesheet', href='/stylesheets/index.css')
+		link(rel='stylesheet', href='/stylesheets/datepicker.css')
 		meta(charset='utf-8')
 		meta(http-equiv='X-UA-Compatible' content='IE=edge')
 		meta(name='viewport' content='width=device-width, initial-scale=1.0')
@@ -18,7 +19,7 @@ html(lang="en")
 							span.icon-bar
 							span.icon-bar
 							span.icon-bar
-					a.navbar-brand(href='#') Campus Synergy
+					a.navbar-brand(href='/') Campus Synergy
 					.navbar-collapse.collapse.navbar-right
 						ul.nav.navbar-nav
 							li.active
@@ -49,7 +50,6 @@ html(lang="en")
 								a(href='#logout' data-toggle='modal') Logout
 							li 
 								a(href='#about' data-toggle='modal') About
-
 
 		section#wrapper!= body
 

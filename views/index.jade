@@ -15,7 +15,6 @@
 	.col-md-10
 		#map-canvas.google-map-canvas
 		#listViewDiv
-			p TODO
 	.col-md-1
 
 #login.modal.fade(role='dialog')
@@ -99,9 +98,50 @@
 								- each building in buildingsJson
 									option= building.name
 					.form-group
-						label.col-sm-2.control-label(for='roomNumber') Room Number
+						label.col-sm-2.control-label(for='eventRoomNumber') Room Number
 						.col-sm-10
-							input.form-control#roomNumber(type='text' placeholder='Room Number')
+							input.form-control#eventRoomNumber(type='text' placeholder='Room Number')
+
+					.form-group
+						label.col-sm-2.control-label(for='eventStartingDate') Starting Date
+						.col-sm-10
+							//input.form-control#eventStartingDate(type='text', placeholder='Starting Date', data-behaviour='datepicker')
+
+							.input-append.date(data-date-format='dd-mm-yyy')
+								input.form-control#eventStartingDate(type='text' placeholder='Starting Date')
+								span.add-on
+									i.icon-th
+
+					.form-group
+						label.col-sm-2.control-label Starting Time
+						.col-sm-2
+							select.form-control#eventStartHour
+								-for(var i = 1; i<=12; i++){ if(i==8){ 
+									option(selected="selected")= i
+								- } else {
+									option= i
+								- }
+								- }
+						.col-sm-2
+							select.form-control#eventStartMinute
+								-for(var i = 0; i<=59; i++){ if(i == 0){
+									option(selected="selected")= i
+								- } else{
+									option= i
+								- }}
+						.col-sm-2
+							select.form-control#eventStartAmOrPM
+								option(selected="selected") AM
+								option PM
+						.col-sm-2
+					
+					.form-group
+						label.col-sm-2.control-label(for='eventDuration') Duration
+						.col-sm-10
+							select.form-control#eventDuration
+								- for(var i = 1; i <=24; i++){
+									option= i
+								- }
 			.modal-footer
 				button.btn.btn-primary#addEventBtn Add Event
 				button.btn.btn-default(data-dismiss='modal') Close
@@ -122,6 +162,7 @@ script(src='/jquery/jquery.2.0.3.min.js')
 //API Key from james gmail account
 script(src='https://maps.googleapis.com/maps/api/js?key=AIzaSyCzpJOAcx0wRy-kI-qKyowvruT8ecXs8KY&sensor=true')
 script(src='http://www.parsecdn.com/js/parse-1.2.14.min.js')
-script(src='/custom_js/index.js')
 script(src='/bootstrap/js/bootstrap.min.js')
-
+script(src='/custom_js/bootstrap-datepicker.js')
+script(src='/custom_js/moment.min.2.4.0.js')
+script(src='/custom_js/index.js')
