@@ -1,10 +1,16 @@
 Parse.initialize("QuoI3WPv5g9LyP4awzhZEH8FvRKIgWgFEdFJSTmB", "lsdwkYQTwv0mTcFQWvK33gZ5ISRCCbMfPrA0AJ9j");
-
 $(function(){
   $('#loggedInNavBar').hide();
   $('#listViewDiv').hide();
   $('#eventStartingDate').datepicker();
   //$('.datepicker').datepicker();
+
+  var currentUser = Parse.User.current();
+
+  if(currentUser){
+    $('#notLoggedInNavBar').hide();
+    $('#loggedInNavBar').show();
+  }
 
 });
 
@@ -19,6 +25,18 @@ function buildErrorsTable(textAry){
   }
   return errorsTable;
 }
+
+$('#logoutBtn').click(function(){
+  var currentUser = Parse.User.current(); 
+
+  if(currentUser != null){
+    Parse.User.logOut();
+    $('.modal').modal('hide');
+    $('#notLoggedInNavBar').show();
+    $('#loggedInNavBar').hide();
+  }
+
+});
 
 $('#listViewBtn').click(function(){
 
@@ -55,9 +73,28 @@ $('#listViewBtn').click(function(){
           var objectId = results[i].id;
           //console.log('objectId: ' + objectId);
           var button = $('<button>').attr('class', 'btn btn-info').attr('id', objectId).text('More Info');
+          var anEvent = results[i];
+          anEvent['roomString'] = results[i].get('roomString');
+          anEvent['bldName'] = results[i].get('bldName');
+          anEvent['duration'] = results[i].get('duration');
+          anEvent['longDescription'] = results[i].get('longDescription');
+          anEvent['publisher'] = results[i].get('publisher');
+          anEvent['title'] = results[i].get('title');
+
           button.click(function(){
-            var id = $(this).attr('id');
-            //console.log('id: '+id);
+            var eTable = $('<table>');
+            
+            eTable.append($('<tr>').append($('<td>').text("Room Number: ")).append($('<td>').text(anEvent['roomString'])));
+            eTable.append($('<tr>').append($('<td>').text("Building: ")).append($('<td>').text(anEvent['bldName'])));
+            eTable.append($('<tr>').append($('<td>').text("Start Time: ")).append($('<td>').text(formattedDate)));
+            eTable.append($('<tr>').append($('<td>').text("Duration: ")).append($('<td>').text(anEvent['duration'])));
+            eTable.append($('<tr>').append($('<td>').text("Description: ")).append($('<td>').text(anEvent['longDescription'])));
+            eTable.append($('<tr>').append($('<td>').text("Creator: ")).append($('<td>').text(anEvent['publisher'])));
+
+            $('#moreEventsHeader').html( '<h4>' + 'Event: ' + anEvent['title'] + '</h4>');
+            $('#moreEventsBody').html(eTable);
+            $('#moreEventsModal').modal('show');
+
           }); 
           eventsRow.append($('<td>').append(button));
           eventsBody.append(eventsRow);
@@ -157,24 +194,36 @@ $('#addEventBtn').click(function(){
       success: function(campusEvent){
         var successTbl = $('<table>').append($('<tr>').append($('<td>').text('Successfully added the event.')));
         var successDiv = $('<div>').attr('class', 'alert alert-success').append(successTbl);
-        $('#addEventResult').append(successDiv);
+        $('#addEventResult').html(successDiv);
+
+        //Reset all the fields
+        $('#eventTitle').val('');
+        $('#eventDescription').val('');
+        $('#eventBuilding').val('AL');
+        $('#eventRoomNumber').val('');
+        $('#eventStartingDate').val('');
+        $('#eventStartHour').val('8');
+        $('#eventStartMinute').val('0');
+        $('#eventStartAmOrPM').val('AM');
+        $('#eventDuration').val('1');       
+
       },
       error: function(campusEvent, error){
         textAry = new Array();
         textAry.push('Error adding event');
-        console.log('Error: ' + error.description);
-        console.log('error msg: ' + error.msg);
-        console.log('error code: ' + error.code);
+        //console.log('Error: ' + error.description);
+        //console.log('error msg: ' + error.msg);
+        //console.log('error code: ' + error.code);
         var addEventErrorContainer = $('<div>').attr('class', 'alert alert-danger');
         addEventErrorContainer.append(buildErrorsTable(textAry));
-        $('#addEventResult').append(addEventErrorContainer);
+        $('#addEventResult').html(addEventErrorContainer);
       }
     });
 
   }else{
     var addEventErrorContainer = $('<div>').attr('class', 'alert alert-danger');
     addEventErrorContainer.append(buildErrorsTable(textAry));
-    $('#addEventResult').append(addEventErrorContainer);
+    $('#addEventResult').html(addEventErrorContainer);
   }
 
 });
@@ -206,7 +255,7 @@ $('#loginBtn').click(function(){
           console.log("success");
           var successTbl = $('<table>').append($('<tr>').append($('<td>').text('Login Success!')));
           var successDiv = $('<div>').attr('class', 'alert alert-success').append(successTbl);
-          //$('#loginResult').append(successDiv);
+          //$('#loginResult').html(successDiv);
 
           $('.modal').modal('hide');
           $('#notLoggedInNavBar').hide();
@@ -226,7 +275,10 @@ $('#loginBtn').click(function(){
 
       },
       error: function(user, error){
-        console.log("error logging in");
+        var textAry = ['Error Logging in. Make sure you entered your username and password correctly.'];
+        var loginErrorContainer = $('<div>').attr('class', 'alert alert-danger');
+        loginErrorContainer.append(buildErrorsTable(textAry));
+        $('#loginResult').append(loginErrorContainer);
       }
     })
 
@@ -310,16 +362,188 @@ $('#signupBtn').click(function(){
 
 });
 
+//Creates the google map along with the overlays and their listeners
 function initialize() {
 		var lat = 32.728987;
 		var lng = -97.115008;
         var mapOptions = {
           center: new google.maps.LatLng(lat,lng),
-          zoom: 14
+          zoom: 16
         };
         console.log("map: " + document.getElementById("map-canvas"));
         var map = new google.maps.Map(document.getElementById("map-canvas"),
             mapOptions);
         console.log("finished");
+
+      var CampusEvents = Parse.Object.extend('campus_synergy');
+      var query = new Parse.Query(CampusEvents);
+
+      query.find({
+        success: function(results){
+          $.getJSON('/buildings_json', function(data){
+
+            var buildingsJSONHash = {};
+
+            for(var i=0; i < data.length; i++){
+              buildingsJSONHash[data[i]['name']] = data[i]['coordinates'];
+            }
+
+            //This holds the overlays that needs to be drawn for each building
+            var mapOverlayHash = {};
+
+            for(var i=0; i < results.length; i++){
+              //This makes sure that only one instance of the building coordinates exists
+              if(buildingsJSONHash[results[i].get('bldName')] != null){
+                //console.log('coordinates: ' + buildingsJSONHash[results[i].get('bldName')]);
+                var coordinates = buildingsJSONHash[results[i].get('bldName')];
+                
+                if(mapOverlayHash[results[i].get('bldName')] == null){
+                  var aHash = {};
+                  aHash['coordinates'] = coordinates;
+                  mapOverlayHash[results[i].get('bldName')] = aHash;
+                  console.log('coordinates: ' + mapOverlayHash[results[i].get('bldName')]);
+                }
+
+                if(mapOverlayHash[results[i].get('bldName')]['bldEventsArray'] == null){
+                  var eventsArray = [];
+                  var eventHash = {};
+
+                  eventHash['id'] = results[i].id;
+                  eventHash['date'] = results[i].get('date');
+                  eventHash['duration'] = results[i].get('duration');
+                  eventHash['longDescription'] = results[i].get('longDescription');
+                  eventHash['publisher'] = results[i].get('publisher');
+                  eventHash['roomString'] = results[i].get('roomString');
+                  eventHash['title'] = results[i].get('title');
+                  eventHash['bldName'] = results[i].get('bldName');
+
+                  eventsArray.push(eventHash);
+                  console.log(mapOverlayHash[results[i].get('bldName')]);
+                  mapOverlayHash[results[i].get('bldName')]['bldEventsArray'] = eventsArray;
+                }else{
+                  var eventHash = {};
+                  eventHash['id'] = results[i].id;
+                  eventHash['date'] = results[i].get('date');
+                  eventHash['duration'] = results[i].get('duration');
+                  eventHash['longDescription'] = results[i].get('longDescription');
+                  eventHash['publisher'] = results[i].get('publisher');
+                  eventHash['roomString'] = results[i].get('roomString');
+                  eventHash['title'] = results[i].get('title');
+                  eventHash['bldName'] = results[i].get('bldName');
+                  mapOverlayHash[results[i].get('bldName')]['bldEventsArray'].push(eventHash);
+                }
+             
+              }
+            }
+           
+            //myValues is a Hash that contains, {'coordinates':anArray, 'bldEventsArray':eventsArrayHash}
+            $.each(mapOverlayHash, function(key, myValues){
+
+              var polyCoords = [];
+              var value = myValues['coordinates'];
+              for(var i =0; i < value.length; i++){
+                //console.log('lat: ' + value[i]['lat']);
+                //console.log('lng: ' + value[i]['lng']);
+                polyCoords.push(new google.maps.LatLng(value[i]['lat'], value[i]['lng']));
+              }
+
+             var mapPolygons = [];
+              mapPolygons.push(new google.maps.Polygon({
+                paths: polyCoords,
+                strokeColor: '#FF0000',
+                strokeOpacity: 0.8,
+                strokeWeight: 2,
+                fillColor: '#FF0000',
+                fillOpacity: 0.35
+              }));
+              
+
+              for(var i =0; i < mapPolygons.length; i++){
+                mapPolygons[i].setMap(map);
+
+                var eventsArray = [];
+                var polygonProperty = {
+                  'bldName':key,
+                  'eventsList': myValues['bldEventsArray']
+                };
+
+                var aPolygon = mapPolygons[i];
+                aPolygon.polygonPrpty = polygonProperty;
+
+                google.maps.event.addListener(aPolygon, 'click',
+                  function(event){ 
+                    //alert('bldName: ' + aPolygon.polygonPrpty['bldName'] + ', num events: ' + aPolygon.polygonPrpty['eventsList'].length);
+                    //console.log(aPolygon.polygonPrpty['eventsList']);
+                    var eventsTable = $('<table>').attr('class', 'table table-striped');
+                    var eventsHeader = ['Title', 'Room', 'Start Time', 'Duration', 'More Info'];
+                    var tHead = $('<thead>');
+
+                    var tHeadRow = $('<tr>'); 
+                    for(var i =0; i < eventsHeader.length; i++){
+                      tHeadRow.append($('<td>').text(eventsHeader[i]));
+                    } 
+                    tHead.append(tHeadRow);
+
+                    var eventsList = aPolygon.polygonPrpty['eventsList'];
+                    var tBody = $('<tbody>');
+                    for(var i = 0; i < eventsList.length; i++){
+                      var aRow = $('<tr>');
+                      aRow.append($('<td>').text(eventsList[i]['title']));
+                      aRow.append($('<td>').text(eventsList[i]['roomString']));
+
+                      var parseDateFormat = 'ddd MMM DD HH:mm:ss YYYY';
+                      var displayFormat = 'MM-DD-YYYY, h:mm:ss A';
+                      var formattedDate = moment(eventsList[i]['date'].toLocaleString(), parseDateFormat).format(displayFormat); 
+                      
+                      aRow.append($('<td>').text(formattedDate));
+
+                      aRow.append($('<td>').text(eventsList[i]['duration']));
+
+                      var objectId = eventsList[i]['id'];
+                      //console.log('objectId: ' + objectId);
+                      var button = $('<button>').attr('class', 'btn btn-info').attr('id', objectId).text('More Info');
+                      var anEvent = eventsList[i];
+                      
+                      button.click(function(){
+                        var id = $(this).attr('id');
+                        //console.log('id: '+id);
+                        console.log('events List: ' + eventsList.length);
+
+                        var eTable = $('<table>');
+                        
+                        eTable.append($('<tr>').append($('<td>').text("Room Number: ")).append($('<td>').text(anEvent['roomString'])));
+                        eTable.append($('<tr>').append($('<td>').text("Building: ")).append($('<td>').text(anEvent['bldName'])));
+                        eTable.append($('<tr>').append($('<td>').text("Start Time: ")).append($('<td>').text(formattedDate)));
+                        eTable.append($('<tr>').append($('<td>').text("Duration: ")).append($('<td>').text(anEvent['duration'])));
+                        eTable.append($('<tr>').append($('<td>').text("Description: ")).append($('<td>').text(anEvent['longDescription'])));
+                        eTable.append($('<tr>').append($('<td>').text("Creator: ")).append($('<td>').text(anEvent['publisher'])));
+
+                        $('#moreEventsHeader').html( '<h4>' + 'Event: ' + anEvent['title'] + '</h4>');
+                        $('#moreEventsBody').html(eTable);
+                        $('#moreEventsModal').modal('show');
+                      }); 
+
+                      aRow.append($('<td>').append(button));
+                      tBody.append(aRow);
+                    }
+
+                    eventsTable.append(tHead);
+                    eventsTable.append(tBody);
+
+                    $('#overlayEventsListHeader').html('<h4>' + 'Events for ' + aPolygon.polygonPrpty['bldName'] + '</h4>');
+                    $('#overlayEventsListBody').html(eventsTable);
+                    $('#overlayEventsList').modal('show');
+
+                });
+              }
+            });
+
+          });
+
+        },
+        error: function(error){
+
+      }});
+   
 }
 google.maps.event.addDomListener(window, 'load', initialize);

@@ -1,5 +1,6 @@
 html,body,.row,.col-md-10, #wrapper{
 	height: 100%;
+	padding-bottom: 25px;
 }
 #map-canvas{
 	width: 100%;
