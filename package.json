@@ -1,10 +1,13 @@
 {
-  "name":"application-name",
+  "name":"Campus-Synergy",
   "version":"0.0.1",
   "private":true,
   "dependencies":{
     "express":"2.5.4",
     "jade":">= 0.0.1",
-    "xml2js":"latest"
+    "xml2js":"latest",
+    "googleapis": "*",
+    "fbgraph":"0.2.8",
+    "nodemailer":"0.6.0"
   }
 }

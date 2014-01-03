@@ -1,15 +1,263 @@
 Parse.initialize("QuoI3WPv5g9LyP4awzhZEH8FvRKIgWgFEdFJSTmB", "lsdwkYQTwv0mTcFQWvK33gZ5ISRCCbMfPrA0AJ9j");
+
+//Deconstrute a moment object into 
+//The date, hour, minute, and am or pm
+function deconstructTime(timeMoment){
+  var result = {'date':'', 'hour':'', 'minute':'', 'amorpm':''};
+  result['date'] = timeMoment.format('MM/DD/YYYY');
+  var timeFormatted = timeMoment.format('h:m:A');
+  var valuesAry = timeFormatted.split(':');
+  result['hour'] = valuesAry[0];
+  result['minute'] = valuesAry[1];
+  result['amorpm'] = valuesAry[2];
+  //console.log();
+  return result;
+}
+
+//Reformat and display the users events after retrieving them from their google
+//calendar
+function googleCalInitializer(googleCalJSONValue){
+
+  if( googleCalJSONValue === null || googleCalJSONValue ===''){
+    console.log('googleCalJSON value is null');
+  }else{
+
+    //console.log('googleCalJSONValue: ' + googleCalJSONValue);
+    //The google calendar data has been found!
+    //Create table thats displays all the events with the option to add
+    var googleCalEventsObj = $.parseJSON(googleCalJSONValue);
+    var allGoogleCalEvents = [];
+
+    //Retrieve all the events from the obj
+    for(var g in googleCalEventsObj){
+      var gEvents = googleCalEventsObj[g].cal_events;
+      console.log(gEvents);
+      //console.log('type: ' + typeof(gEvents));
+      for(var i = 0; i < gEvents.length; i++){
+
+        if(typeof gEvents[i].description === 'undefined'){
+          gEvents[i].description = "";
+        }
+
+        if(typeof gEvents[i].eventSummary === 'undefined'){
+          gEvents[i].eventSummary = "";
+        }
+
+        gEvents[i].fullDescription = gEvents[i].description;
+        gEvents[i].fullEventSummary = gEvents[i].eventSummary;
+
+        if(gEvents[i].description.length > 20){
+          gEvents[i].description = gEvents[i].description.substr(0,20) + '...  ';
+        }
+
+        if(gEvents[i].eventSummary.length > 20){
+          gEvents[i].eventSummary = gEvents[i].eventSummary.substr(0,20) + '...  ';
+        }
+
+        allGoogleCalEvents.push(gEvents[i]);
+      }
+    }
+
+    //console.log('allGoogleCalEvents length: ' + allGoogleCalEvents.length);
+
+    var googleCalEventsTbl= $('<table>');
+    var googleCalEventsTblHeader = $('<thead>');
+    var headerVals = ['Event Title', 'Event Description', 'Start Time', 'End Time', 'Add Event'];
+
+    var tTemp = $('<tr>');
+
+    for(var i = 0; i < headerVals.length; i++){
+      tTemp.append($('<td>').text(headerVals[i]));
+    }
+
+    googleCalEventsTblHeader.append($('<tr>').append($('<td>').html('<b>Google Calendar Events</b>')));
+    googleCalEventsTblHeader.append(tTemp);
+    googleCalEventsTbl.append(googleCalEventsTblHeader);
+
+    var tBody = $('<tbody>');
+    for(var i = 0; i < allGoogleCalEvents.length; i++){
+      var tRow = $('<tr>');
+      //console.log(allGoogleCalEvents[i].eventSummary);
+      var eventTitleFull = allGoogleCalEvents[i].fullEventSummary;
+      var eventDescriptionFull = allGoogleCalEvents[i].fullDescription;
+
+      tRow.append($('<td>').text(allGoogleCalEvents[i].eventSummary));
+      tRow.append($('<td>').text(allGoogleCalEvents[i].description));
+
+      var googleCalEventFormat = 'YYYY-MM-DDTHH:mm:ssZ';
+      var displayFormat = 'MM/DD/YY, h:mm A';
+      var formattedStartDate = moment(allGoogleCalEvents[i].eventStart, googleCalEventFormat).format(displayFormat);
+      //console.log('formattedDate: ' + formattedDate);
+      var eventStartDate = moment(allGoogleCalEvents[i].eventStart, googleCalEventFormat);
+      tRow.append($('<td>').text(formattedStartDate));
+      var formattedEndDate = moment(allGoogleCalEvents[i].eventEnd, googleCalEventFormat).format(displayFormat);
+      var eventEndDate = moment(allGoogleCalEvents[i].eventEnd, googleCalEventFormat);
+
+      var eventDuration = eventEndDate.diff(eventStartDate,'hours');
+      //console.log('eventDuration: ' + eventDuration);
+      if(eventDuration < 1 || eventDuration > 24)
+        eventDuration = 1;
+
+      tRow.append($('<td>').text(formattedEndDate));
+      tRow.append($('<td>').append(
+          $('<button>').attr('class', 'btn btn-primary').text('Add Event').click(
+            
+          (function(eventTitleFull, eventDescriptionFull,eventStartDate, eventDuration){
+              return function(){
+                $('#syncedCalsModal').modal('hide');
+                $('#addEvent').modal('show');
+
+                //Replace variable values in the addevent modal
+                $('#eventTitle').val(eventTitleFull);
+                $('#eventDescription').val(eventDescriptionFull);
+
+                //Retrieve the start date, start time , and attemp duration
+                //if duration is greater than 24 then set it equal to 24
+                var resultHash = deconstructTime(eventStartDate);
+                $('#eventStartingDate').val(resultHash['date']);
+                $('#eventStartHour').val(resultHash['hour']);
+                $('#eventStartMinute').val(resultHash['minute']);
+                $('#eventStartAmOrPM').val(resultHash['amorpm']);
+                $('#eventDuration').val(eventDuration);
+
+              };
+          })(eventTitleFull, eventDescriptionFull, eventStartDate, eventDuration)
+      )));
+
+      tBody.append(tRow);
+    }
+
+    googleCalEventsTbl.append(tBody);
+    $('#googleCalEventsModalBody').append(googleCalEventsTbl);
+  
+  }
+}
+
+//Reformat and display the users events after retrieving them from facebook
+function fbEventsInitializer(fbEventsJSONValue){
+
+  if(fbEventsJSONValue === null || fbEventsJSONValue ===''){
+    console.log('fbEventsJSONValue is null');
+  }else{
+    console.log(fbEventsJSONValue);
+    var fbEventsObj = $.parseJSON(fbEventsJSONValue);
+    var headerVals = ['Event Title', 'Event Description', 'Start Time', 'End Time', 'Add Event'];
+    var fbTable = $('<table>');
+    var tblHeader = $('<thead>');
+    var tblBody = $('<tbody>');
+    var tblHeaderRow = $('<tr>');
+
+    for(var i = 0; i < headerVals.length; i++){
+      tblHeaderRow.append($('<td>').text(headerVals[i]));
+    }      
+
+    tblHeader.append($('<tr>').append($('<td>').html('<b>Facebook Events</b>')));
+    tblHeader.append(tblHeaderRow);
+    fbTable.append(tblHeader);
+
+    for(var f in fbEventsObj){
+      var fObj = fbEventsObj[f];
+      var eventTitle = '';
+      var eventDescription = '';
+      var eventStartTime = '';
+      var eventTitleFull ='';
+      var eventDescriptionFull='';
+      var tblRow = $('<tr>');
+
+      if(typeof fObj['name'] !== 'undefined'){
+        eventTitle = fObj['name'];
+        eventTitleFull = eventTitle;
+      }
+
+      if(typeof fObj['description'] !== 'undefined'){
+        eventDescription = fObj['description'];
+        eventDescriptionFull = eventDescription;
+      }
+
+      if(typeof fObj['start_time'] !== 'undefined')
+        eventStartTime = fObj['start_time'];
+
+      if(eventTitle.length > 20)
+        eventTitle = eventTitle.substr(0,20) + '...';
+
+      if(eventDescription.length > 20)
+        eventDescription = eventDescription.substr(0,20) + '...';
+
+      tblRow.append($('<td>').text(eventTitle));
+      tblRow.append($('<td>').text(eventDescription));
+
+      var fbEventFormat = 'YYYY-MM-DDTHH:mm:ssZ';
+      var displayFormat = 'MM/DD/YY, h:mm A';
+      var momentDateStart = moment(eventStartTime, fbEventFormat);
+      var formattedDate = momentDateStart.format(displayFormat);
+      var endDate = moment(eventStartTime, fbEventFormat).add('hours', 1).format(displayFormat);
+
+      tblRow.append($('<td>').text(formattedDate));
+      tblRow.append($('<td>').text(endDate));
+      tblRow.append($('<td>').append(
+          $('<button>').attr('class', 'btn btn-primary').text('Add Event').click(
+            
+          (function(eventTitleFull, eventDescriptionFull, momentDateStart){
+              return function(){
+                $('#syncedCalsModal').modal('hide');
+                $('#addEvent').modal('show');
+
+                //Replace variable values in the addevent modal
+                $('#eventTitle').val(eventTitleFull);
+                $('#eventDescription').val(eventDescriptionFull);
+
+                //return value: {'date':'', 'hour':'', 'minute':'', 'amorpm':''};
+                var resultHash = deconstructTime(momentDateStart);
+                $('#eventStartingDate').val(resultHash['date']);
+                $('#eventStartHour').val(resultHash['hour']);
+                $('#eventStartMinute').val(resultHash['minute']);
+                $('#eventStartAmOrPM').val(resultHash['amorpm']);
+
+              };
+          })(eventTitleFull, eventDescriptionFull, momentDateStart)
+      )));
+      tblBody.append(tblRow);
+    }
+    fbTable.append(tblBody);
+
+    $('#fbCalEventsModalBody').append(fbTable);
+
+  }
+}
+
 $(function(){
+
   $('#loggedInNavBar').hide();
   $('#listViewDiv').hide();
   $('#eventStartingDate').datepicker();
   //$('.datepicker').datepicker();
-
   var currentUser = Parse.User.current();
-
   if(currentUser){
     $('#notLoggedInNavBar').hide();
     $('#loggedInNavBar').show();
+  }
+
+  var fbEventsJSONValue = $('#fbEventsJSON').val();
+  var googleCalJSONValue = $('#googleCalJSON').val();
+
+  googleCalInitializer(googleCalJSONValue);
+  fbEventsInitializer(fbEventsJSONValue);
+
+  //Check that if either the google json or facebook json is null
+  if(fbEventsJSONValue || googleCalJSONValue){
+    $('#syncedCalsModal').modal('show');
+    var addEventModal = $('#addEvent.modal-footer');
+
+    //Add a button in the add events to see the synced events
+    var mySyncedEventsBtn 
+      = $('<button>').attr('class', 'btn btn-primary').text('Synced Events').click(
+        function(){
+          //console.log('Synced Events Btn clicked.');
+          $('.modal').modal('hide');
+          $('#syncedCalsModal').modal('show');
+        });
+
+    $('#addEventsFooter').append(mySyncedEventsBtn);
   }
 
 });
@@ -25,6 +273,41 @@ function buildErrorsTable(textAry){
   }
   return errorsTable;
 }
+
+$('#contactUs').click(function(){
+  //Sends the email
+  var contactUsSubject = $('#contactUsSubject').val();
+  var contactUsFromEmail = $('#contactUsFromEmail').val();
+  var contactUsBody = $('#contactUsBody').val();
+
+  var textAry = [];
+  if(contactUsSubject === '')
+    textAry.push('Please enter subject');
+  if(contactUsBody === '')
+    textAry.push('Please enter the body');
+
+  var errorsTbl = buildErrorsTable(textAry);
+  $('#contactUsResult').append(errorsTbl);
+
+  var formData = {'contactUsSubject': contactUsSubject, 
+  'contactUsFromEmail':contactUsFromEmail,
+  'contactUsBody':contactUsBody};
+  
+  /*
+  $.ajax({
+    url:'/sendemail',
+    type: 'POST',
+    data: formData,
+    success: function(data, textStatus, response){
+        console.log('response: ' + response);
+    },
+    error: function(response, textStatus, errorThrown){
+
+    }
+  });
+  */
+
+});
 
 $('#logoutBtn').click(function(){
   var currentUser = Parse.User.current(); 
@@ -542,8 +825,6 @@ function initialize() {
 
         },
         error: function(error){
-
       }});
-   
 }
 google.maps.event.addDomListener(window, 'load', initialize);

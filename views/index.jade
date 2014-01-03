@@ -9,9 +9,10 @@
 				td
 					button.btn.btn-primary(type='button')#mapViewBtn Map View 
 						span.glyphicon.glyphicon-map-marker
-
 .row
 	.col-md-1
+		input(type='hidden', id='googleCalJSON', value= googleCalJSON)
+		input(type='hidden', id='fbEventsJSON', value= fbEventsJSON)
 	.col-md-10
 		#map-canvas.google-map-canvas
 		#listViewDiv
@@ -142,7 +143,7 @@
 								- for(var i = 1; i <=24; i++){
 									option= i
 								- }
-			.modal-footer
+			.modal-footer#addEventsFooter
 				button.btn.btn-primary#addEventBtn Add Event
 				button.btn.btn-default(data-dismiss='modal') Cancel
 
@@ -153,10 +154,21 @@
 				h4 Sync Calendars
 				#syncCalendarResult
 			.modal-body
-				p Sync up with your calendars to automatically add events to the application! We currently support google calendar.
+				p Sync up with your calendars to automatically add events to the application! We currently support google calendar, and facebook events.
 				.alert.alert-danger Events will be public for everyone to see.
+				p 
+					table
+						thead
+							tr
+								td Calendars
+						tbody
+							tr
+								td 
+									a.btn.btn-primary(href= gOauthUrl) Google
+							tr
+								td
+									a.btn.btn-primary(href= fbApiUrl) Facebook
 			.modal-footer
-				button.btn.btn-primary#SyncCalendarsBtn Sync Calendars
 				button.btn.btn-default(data-dismiss='modal') Close
 
 #overlayEventsList.modal.fade(role='dialog')
@@ -189,6 +201,42 @@
 				.alert.alert-danger Are you sure you want to logout?
 			.modal-footer
 				button.btn.btn-primary#logoutBtn Logout
+				button.btn.btn-default(data-dismiss='modal') Cancel
+
+#contact.modal.fade(role='dialog')
+	.modal-dialog
+		.modal-content
+			.modal-header
+				h4 Contact Us
+				#contactUsResult
+			.modal-body
+				p Bugs, Complaints, or anything else? Contact us by sending an email to: uta.mobi@gmail.com
+				//-.form-horizontal
+				//-	.form-group
+				//-		label.col-sm-2.control-label(for='contactUsSubject') Subject
+				//-		.col-sm-10
+				//-			input.form-control#contactUsSubject(type='text' placeholder='Subject')
+				//-	.form-group
+				//-		label.col-sm-2.control-label(for='contactUsFromEmail') From
+				//-		.col-sm-10
+				//-			input.form-control#contactUsFromEmail(type='email' placeholder='Email')
+				//-	.form-group
+				//-		label.col-sm-2.control-label(for='contactUsBody') Body
+				//-		.col-sm-10
+				//-			textarea#contactUsBody.form-control(rows=3)
+			.modal-footer
+				//- button.btn.btn-primary#contactUs Contact Us
+				button.btn.btn-default(data-dismiss='modal') Close
+
+#syncedCalsModal.modal.fade(role='dialog')
+	.modal-dialog
+		.modal-content
+			.modal-header
+				h4 Your Google Calendar Events
+			.modal-body
+				#googleCalEventsModalBody
+				#fbCalEventsModalBody
+			.modal-footer
 				button.btn.btn-default(data-dismiss='modal') Cancel
 
 script(src='/jquery/jquery.2.0.3.min.js')

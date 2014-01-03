@@ -6,9 +6,12 @@
 var express = require('express');
 var fs = require('fs');
 var xml2js = require('xml2js');
+var nodemailer = require('nodemailer');
 var routes = require('./routes');
 var port = process.env.PORT || 3000;
-
+//var path = require('path');
+var gapi = require('./lib/gapi');
+var fb_api = require('./lib/fbapi');
 var app = module.exports = express.createServer();
 
 // Configuration
@@ -57,10 +60,29 @@ fs.readFile('./buildings.xml', function(err, data){
 		}
 	});
 });
-routes.init(buildingsJSON);
+routes.init(buildingsJSON, gapi, fb_api);
 // Routes
 app.get('/', routes.index);
 app.get('/buildings_json', routes.buildingsJson);
+app.get('/fb_code', function(req, res){
+	var code = req.query.code;
+	//Redirect to the index page with the code in the parameters and fb_code=true
+	//console.log('fb_code: '+code);
+	var url = '/?code='+code + '&whichapi='+'fb';
+	res.redirect(url);
+});
+app.post('/sendemail', function(req, res){
+	var contactUsSubject = req.body.contactUsSubject;
+	var contactUsFromEmail = req.body.contactUsFromEmail;
+	var contactUsBody = req.body.contactUsBody;
+
+	//Not doing for now...
+	//console.log('contactUsSubject: ' + contactUsSubject);
+	//console.log('contactUsFromEmail: ' + contactUsFromEmail);
+	//console.log('contactUsBody: ' + contactUsBody);
+
+	res.send('success');
+});
 
 app.listen(port);
 console.log("Express server listening on port %d in %s mode", app.address().port, app.settings.env);
