@@ -446,9 +446,7 @@ $('#addEventBtn').click(function(){
   //console.log('startingTimeString: ' + startingTimeString);
 
   var momentStartingTime = moment(startingTimeString, startingTimeFormat);
-  //console.log('momentStartingTime: ' + momentStartingTime);
   var fiveMinsAfterNow = moment().add('minutes', 5);
-  //console.log('fiveMinsAfterNow: '+ fiveMinsAfterNow);
 
   if(momentStartingTime.isBefore(fiveMinsAfterNow)){
     //console.log('Input time is 5 minutes before now');
@@ -460,48 +458,58 @@ $('#addEventBtn').click(function(){
 
   if(allGood){
 
-    var CampusEvent = Parse.Object.extend('campus_synergy');
-    var campusEvent = new CampusEvent();
+    //Check that the user is logged in before doing this
+    var currentUser = Parse.User.current();
 
-    console.log('campusEvent: ' + campusEvent);
-    campusEvent.set('bldName', eventBuilding);
-    //campusEvent.set('date', momentStartingTime);
-    campusEvent.set('date', new Date(startingTimeString));
-    campusEvent.set('duration', parseInt(eventDuration));
-    campusEvent.set('longDescription', eventDescription);
-    campusEvent.set('roomString', eventRoomNumber);
-    campusEvent.set('publisher', Parse.User.current().getUsername());
-    campusEvent.set('title', eventTitle);
+    if(currentUser){
+      
+      var CampusEvent = Parse.Object.extend('campus_synergy');
+      var campusEvent = new CampusEvent();
 
-    campusEvent.save(null, {
-      success: function(campusEvent){
-        var successTbl = $('<table>').append($('<tr>').append($('<td>').text('Successfully added the event.')));
-        var successDiv = $('<div>').attr('class', 'alert alert-success').append(successTbl);
-        $('#addEventResult').html(successDiv);
+      console.log('campusEvent: ' + campusEvent);
+      campusEvent.set('bldName', eventBuilding);
+      //campusEvent.set('date', momentStartingTime);
+      campusEvent.set('date', new Date(startingTimeString));
+      campusEvent.set('duration', parseInt(eventDuration));
+      campusEvent.set('longDescription', eventDescription);
+      campusEvent.set('roomString', eventRoomNumber);
+      campusEvent.set('publisher', Parse.User.current().getUsername());
+      campusEvent.set('title', eventTitle);
 
-        //Reset all the fields
-        $('#eventTitle').val('');
-        $('#eventDescription').val('');
-        $('#eventBuilding').val('AL');
-        $('#eventRoomNumber').val('');
-        $('#eventStartingDate').val('');
-        $('#eventStartHour').val('8');
-        $('#eventStartMinute').val('0');
-        $('#eventStartAmOrPM').val('AM');
-        $('#eventDuration').val('1');       
+      campusEvent.save(null, {
+        success: function(campusEvent){
+          var successTbl = $('<table>').append($('<tr>').append($('<td>').text('Successfully added the event.')));
+          var successDiv = $('<div>').attr('class', 'alert alert-success').append(successTbl);
+          $('#addEventResult').html(successDiv);
 
-      },
-      error: function(campusEvent, error){
-        textAry = new Array();
-        textAry.push('Error adding event');
-        //console.log('Error: ' + error.description);
-        //console.log('error msg: ' + error.msg);
-        //console.log('error code: ' + error.code);
-        var addEventErrorContainer = $('<div>').attr('class', 'alert alert-danger');
-        addEventErrorContainer.append(buildErrorsTable(textAry));
-        $('#addEventResult').html(addEventErrorContainer);
-      }
-    });
+          //Reset all the fields
+          $('#eventTitle').val('');
+          $('#eventDescription').val('');
+          $('#eventBuilding').val('AL');
+          $('#eventRoomNumber').val('');
+          $('#eventStartingDate').val('');
+          $('#eventStartHour').val('8');
+          $('#eventStartMinute').val('0');
+          $('#eventStartAmOrPM').val('AM');
+          $('#eventDuration').val('1');       
+
+        },
+        error: function(campusEvent, error){
+          textAry = new Array();
+          textAry.push('Error adding event');
+          //console.log('Error: ' + error.description);
+          //console.log('error msg: ' + error.msg);
+          //console.log('error code: ' + error.code);
+          var addEventErrorContainer = $('<div>').attr('class', 'alert alert-danger');
+          addEventErrorContainer.append(buildErrorsTable(textAry));
+          $('#addEventResult').html(addEventErrorContainer);
+        }
+      });
+    }else{
+      var addEventErrorContainer = $('<div>').attr('class', 'alert alert-danger');
+      addEventErrorContainer.append(buildErrorsTable(['You must be logged in to add events.']));
+      $('#addEventResult').html(addEventErrorContainer);
+    }
 
   }else{
     var addEventErrorContainer = $('<div>').attr('class', 'alert alert-danger');
