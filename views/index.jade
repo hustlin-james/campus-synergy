@@ -34,8 +34,26 @@
 						label.col-sm-2.control-label(for='loginPass') Password
 						.col-sm-10
 							input.form-control#loginPass(type='password' placeholder='Password')
+				a(href='#forgotPwModal' data-toggle='modal') Forgot Password
 			.modal-footer
 				button.btn.btn-primary#loginBtn Log in
+				button.btn.btn-default(data-dismiss='modal') Close
+
+#forgotPwModal.modal.fade(role='dialog')
+	.modal-dialog
+		.modal-content
+			.modal-header
+				h4 Forgot My Password
+				#forgotPwResults
+			.modal-body
+				p Please enter an email, and you will receive instructions to reset your password
+				.form-horizontal(role='form')
+					.form-group
+						label.col-sm-2.control-label(for='forgotPwEmail') Email
+						.col-sm-10
+							input.form-control#forgotPwEmail(type='email' placeholder='Email')
+			.modal-footer
+				button.btn.btn-primary#forgotPwEmailBtn Forgot Email
 				button.btn.btn-default(data-dismiss='modal') Close
 
 #about.modal.fade(role='dialog')
@@ -44,7 +62,7 @@
 			.modal-header
 				h4 About
 			.modal-body
-				p This is the Campus Synergy Web application. Find and add events on campus be sure to checkout our mobile apps as well! Android: link, Iphone: link.
+				p This is the Campus Synergy Web application. This is best viewed on a desktop or laptop computer. Find and add events on campus. Also be sure to checkout our mobile apps as well! Android: link, Iphone: link.
 			.modal-footer
 				a.btn.btn-primary(data-dismiss='modal') Close
 

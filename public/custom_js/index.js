@@ -1,5 +1,36 @@
 Parse.initialize("QuoI3WPv5g9LyP4awzhZEH8FvRKIgWgFEdFJSTmB", "lsdwkYQTwv0mTcFQWvK33gZ5ISRCCbMfPrA0AJ9j");
 
+$('#forgotPwEmailBtn').click(function(){
+  var forgotPwEmail = $('#forgotPwEmail').val();
+  console.log('email: '+ forgotPwEmail);
+
+  var errorsAry = [];
+  if(forgotPwEmail === '' || forgotPwEmail === null){
+    errorsAry.push('Please enter an email');
+  }
+
+  if(errorsAry.length > 0){
+    var resultsTbl = buildErrorsTable(errorsAry);
+    var result  = $('<div>').attr('class', 'alert alert-danger').append(resultsTbl);
+    $('#forgotPwResults').html(result);
+  }else{
+    Parse.User.requestPasswordReset(forgotPwEmail,{
+      success: function(){
+        //console.log('success');
+        var result=$('<div>').attr('class', 'alert alert-success').append(buildErrorsTable(['Done! Please check your email.']));
+        $('#forgotPwResults').html(result);
+      },
+      error: function(err){  
+        //console.log('error');
+        var errorMsg = err.message;
+        var result  = $('<div>').attr('class', 'alert alert-danger').append(buildErrorsTable([errorMsg]));
+        $('#forgotPwResults').html(result);
+      }
+    });
+  }
+
+});
+
 //Deconstrute a moment object into 
 //The date, hour, minute, and am or pm
 function deconstructTime(timeMoment){
