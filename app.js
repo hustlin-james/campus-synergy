@@ -61,6 +61,7 @@ fs.readFile('./buildings.xml', function(err, data){
 	});
 });
 routes.init(buildingsJSON, gapi, fb_api);
+
 // Routes
 app.get('/', routes.index);
 app.get('/buildings_json', routes.buildingsJson);
@@ -75,12 +76,6 @@ app.post('/sendemail', function(req, res){
 	var contactUsSubject = req.body.contactUsSubject;
 	var contactUsFromEmail = req.body.contactUsFromEmail;
 	var contactUsBody = req.body.contactUsBody;
-
-	//Not doing for now...
-	//console.log('contactUsSubject: ' + contactUsSubject);
-	//console.log('contactUsFromEmail: ' + contactUsFromEmail);
-	//console.log('contactUsBody: ' + contactUsBody);
-
 	res.send('success');
 });
 

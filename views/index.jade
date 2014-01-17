@@ -62,7 +62,36 @@
 			.modal-header
 				h4 About
 			.modal-body
-				p This is the Campus Synergy Web application. This is best viewed on a desktop or laptop computer. Find and add events on campus. Also be sure to checkout our mobile apps as well! Android: link, Iphone: link.
+				p This is the Campus Synergy Web application. This is best viewed on a desktop or laptop computer. Find and add events on campus. Also be sure to checkout our mobile apps as well!
+				p
+					h4 Mobile Apps
+					ul
+						li 
+							a(href='https://play.google.com/store/apps/details?id=com.saamd.campussynergy&hl=en' target='_blank') Android
+						li  
+							a(href='https://itunes.apple.com/us/app/campussynergy/id717369516?mt=8' target='_blank') Iphone
+			.modal-footer
+				a.btn.btn-primary(data-dismiss='modal') Close
+
+#help.modal.fade(role='dialog')
+	.modal-dialog
+		.modal-content
+			.modal-header
+				h4 Help
+			.modal-body
+				
+				h4 Browser Support
+				p
+					ul
+						li Works best on the latest version of firefox or chrome.
+						li Although you can run this in a mobile browser, it is currently not very well supported. Instead you can download our mobile apps for android and iphone. Click on about for the links.
+				h4 Issues
+				p
+					ul
+						li There is a problem on safari with displaying event dates.
+				h4 Tips
+				ul 
+					li To sync a different google/facebook account, open up a seperate tab and log out of your current account on google/facebook then click on the sync calendars google/facebook again and you can sync calendars for a different account.
 			.modal-footer
 				a.btn.btn-primary(data-dismiss='modal') Close
 
@@ -228,8 +257,7 @@
 				h4 Contact Us
 				#contactUsResult
 			.modal-body
-				p Bugs, Complaints, or anything else? Contact us by sending an email to: uta.mobi@gmail.com
-				As of 01-16-2014, works best on Firefox and Chrome.  Current issue with safari displaying dates.
+				p Bugs, Complaints, or anything else? Contact us by sending an email to: <b>uta.mobi@gmail.com</b>
 				//-.form-horizontal
 				//-	.form-group
 				//-		label.col-sm-2.control-label(for='contactUsSubject') Subject

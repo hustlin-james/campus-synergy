@@ -20,7 +20,22 @@ exports.index = function(req, res){
   //console.log('gapi.url: ' + gapi.url);
   var code = req.query.code;
   var whichApiCode = req.query.whichapi;
+  
+  //console.log('Cookies: '+req.headers.cookie);
 
+  var userName='';
+  if(req.headers.cookie){
+    var allCookies=req.headers.cookie.split(';');
+    var allCookiesLen=allCookies.length;
+    for(var i=0; i < allCookiesLen;i++){
+      var parts = allCookies[i].split('=');
+      if(parts[0] && parts[0].trim() === 'campusSynergyUsername'){
+        userName=JSON.parse(parts[1].trim()).username;
+      }
+    }
+  }
+
+  //console.log('campusSynergyUsername: ' + userName);
   //Just to make sure it has a value, so when
   //it is empty it just renders the index like it does
   if(whichApiCode == null)
@@ -43,13 +58,13 @@ exports.index = function(req, res){
 
             if(graphRes.events != null){
               var fbEvents = graphRes.events.data;
-              fbApiEventsCall(fbEvents, res);
+              fbApiEventsCall(fbEvents, res, userName);
             }
 
           });
 
         }else{
-          console.log('Error occurede');
+          console.log('Error occurred');
         }
     });
   }
@@ -69,7 +84,8 @@ exports.index = function(req, res){
         gOauthUrl: gapi.url,
         fbApiUrl: fb_api.fb_oauth_url,
         googleCalJSON: null,
-        fbEventsJSON: myFbApiJSON
+        fbEventsJSON: myFbApiJSON,
+        myUserName: userName
       });
 
     });
@@ -93,7 +109,7 @@ exports.buildingsJson = function(req, res){
 	res.send(myBuildingsJSON);
 };
 
-function fbApiEventsCall(fbEventsWithId,res){
+function fbApiEventsCall(fbEventsWithId,res,userName){
 
   var fbEventsLength = fbEventsWithId.length;
   var fbEventsIndex = 0;
@@ -103,11 +119,13 @@ function fbApiEventsCall(fbEventsWithId,res){
     var graphEventId = fbEventsWithId[i]['id'];
     fb_api.fb_api.get(graphEventId, function(err, eventRes){
       fbEventsIndex++;
+      //eventRes['myUserName'] = userName;
       allFbEventsProcessed.push(eventRes);
       //Finished with all the events
       if(fbEventsIndex == fbEventsLength){
-        var jsonString = JSON.stringify(allFbEventsProcessed);
-        myFbApiJSON = jsonString;
+        var allFbEventsProcessedWithUsername = {'campusSynergyUsername':userName,
+          'allFbEventsProcessed':allFbEventsProcessed};
+        myFbApiJSON = JSON.stringify(allFbEventsProcessedWithUsername);
         res.redirect('/');
       }
 
@@ -162,13 +180,11 @@ function gApiEventsCall(cal_id, cal_sum, cal_descrip, cal_events, jsonData, resu
             var cal_data = {'cal_sum':cal_sum, 'cal_descrip': cal_descrip, 'cal_events':cal_events};
             jsonData[cal_id] = cal_data;
           }
-
-          myGoogleCalJSON = JSON.stringify(jsonData);
+          myGoogleCalJSON = JSON.stringify({'campusSynergyUsername':res.myUserName, 'googleJsonData':jsonData});
           //This is the final call of the events data
           //Take the json structure and embed it into the index webpage
 
           res.myRes.redirect('/');
-
         }
       });
 }

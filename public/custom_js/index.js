@@ -31,6 +31,28 @@ $('#forgotPwEmailBtn').click(function(){
 
 });
 
+var CampusSynergyCookieManipulator = {
+  setCookie: function(cname,cvalue,exdays){
+    var d = new Date();
+    d.setTime(d.getTime()+(exdays*24*60*60*1000));
+    var expires = "expires="+d.toGMTString();
+    document.cookie = cname + "=" + cvalue + "; " + expires;
+  },
+  getCookie: function (cname){
+    var name = cname + "=";
+    var ca = document.cookie.split(';');
+    for(var i=0; i<ca.length; i++) 
+      {
+      var c = ca[i].trim();
+      if (c.indexOf(name)==0) return c.substring(name.length,c.length);
+      }
+    return "";
+  },
+  deleteCookie: function(cname){
+    document.cookie=cname+"=; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+  }
+};
+
 //Deconstrute a moment object into 
 //The date, hour, minute, and am or pm
 function deconstructTime(timeMoment){
@@ -47,216 +69,218 @@ function deconstructTime(timeMoment){
 
 //Reformat and display the users events after retrieving them from their google
 //calendar
-function googleCalInitializer(googleCalJSONValue){
-
-  if( googleCalJSONValue === null || googleCalJSONValue ===''){
-    console.log('googleCalJSON value is null');
-  }else{
-
+function googleCalInitializer(googleParsedJSON){
     //console.log('googleCalJSONValue: ' + googleCalJSONValue);
     //The google calendar data has been found!
     //Create table thats displays all the events with the option to add
-    var googleCalEventsObj = $.parseJSON(googleCalJSONValue);
-    var allGoogleCalEvents = [];
+  var googleCalEventsObj = googleParsedJSON.googleJsonData;
+  var campusSynergyUsername = googleParsedJSON.campusSynergyUsername;
 
-    //Retrieve all the events from the obj
-    for(var g in googleCalEventsObj){
-      var gEvents = googleCalEventsObj[g].cal_events;
-      console.log(gEvents);
-      //console.log('type: ' + typeof(gEvents));
-      for(var i = 0; i < gEvents.length; i++){
+  var cookieUsername = 
+    $.parseJSON(CampusSynergyCookieManipulator.getCookie('campusSynergyUsername').trim()).username;
 
-        if(typeof gEvents[i].description === 'undefined'){
-          gEvents[i].description = "";
+  if(campusSynergyUsername===cookieUsername){
+      var allGoogleCalEvents = [];
+      //Retrieve all the events from the obj
+      for(var g in googleCalEventsObj){
+        var gEvents = googleCalEventsObj[g].cal_events;
+        //console.log(gEvents);
+        //console.log('type: ' + typeof(gEvents));
+        for(var i = 0; i < gEvents.length; i++){
+
+          if(typeof gEvents[i].description === 'undefined'){
+            gEvents[i].description = "";
+          }
+
+          if(typeof gEvents[i].eventSummary === 'undefined'){
+            gEvents[i].eventSummary = "";
+          }
+
+          gEvents[i].fullDescription = gEvents[i].description;
+          gEvents[i].fullEventSummary = gEvents[i].eventSummary;
+
+          if(gEvents[i].description.length > 20){
+            gEvents[i].description = gEvents[i].description.substr(0,20) + '...  ';
+          }
+
+          if(gEvents[i].eventSummary.length > 20){
+            gEvents[i].eventSummary = gEvents[i].eventSummary.substr(0,20) + '...  ';
+          }
+
+          allGoogleCalEvents.push(gEvents[i]);
         }
-
-        if(typeof gEvents[i].eventSummary === 'undefined'){
-          gEvents[i].eventSummary = "";
-        }
-
-        gEvents[i].fullDescription = gEvents[i].description;
-        gEvents[i].fullEventSummary = gEvents[i].eventSummary;
-
-        if(gEvents[i].description.length > 20){
-          gEvents[i].description = gEvents[i].description.substr(0,20) + '...  ';
-        }
-
-        if(gEvents[i].eventSummary.length > 20){
-          gEvents[i].eventSummary = gEvents[i].eventSummary.substr(0,20) + '...  ';
-        }
-
-        allGoogleCalEvents.push(gEvents[i]);
       }
-    }
 
-    //console.log('allGoogleCalEvents length: ' + allGoogleCalEvents.length);
+      //console.log('allGoogleCalEvents length: ' + allGoogleCalEvents.length);
 
-    var googleCalEventsTbl= $('<table>');
-    var googleCalEventsTblHeader = $('<thead>');
-    var headerVals = ['Event Title', 'Event Description', 'Start Time', 'End Time', 'Add Event'];
+      var googleCalEventsTbl= $('<table>');
+      var googleCalEventsTblHeader = $('<thead>');
+      var headerVals = ['Event Title', 'Event Description', 'Start Time', 'End Time', 'Add Event'];
 
-    var tTemp = $('<tr>');
+      var tTemp = $('<tr>');
 
-    for(var i = 0; i < headerVals.length; i++){
-      tTemp.append($('<td>').text(headerVals[i]));
-    }
+      for(var i = 0; i < headerVals.length; i++){
+        tTemp.append($('<td>').text(headerVals[i]));
+      }
 
-    googleCalEventsTblHeader.append($('<tr>').append($('<td>').html('<b>Google Calendar Events</b>')));
-    googleCalEventsTblHeader.append(tTemp);
-    googleCalEventsTbl.append(googleCalEventsTblHeader);
+      googleCalEventsTblHeader.append($('<tr>').append($('<td>').html('<b>Google Calendar Events</b>')));
+      googleCalEventsTblHeader.append(tTemp);
+      googleCalEventsTbl.append(googleCalEventsTblHeader);
 
-    var tBody = $('<tbody>');
-    for(var i = 0; i < allGoogleCalEvents.length; i++){
-      var tRow = $('<tr>');
-      //console.log(allGoogleCalEvents[i].eventSummary);
-      var eventTitleFull = allGoogleCalEvents[i].fullEventSummary;
-      var eventDescriptionFull = allGoogleCalEvents[i].fullDescription;
+      var tBody = $('<tbody>');
+      for(var i = 0; i < allGoogleCalEvents.length; i++){
+        var tRow = $('<tr>');
+        //console.log(allGoogleCalEvents[i].eventSummary);
+        var eventTitleFull = allGoogleCalEvents[i].fullEventSummary;
+        var eventDescriptionFull = allGoogleCalEvents[i].fullDescription;
 
-      tRow.append($('<td>').text(allGoogleCalEvents[i].eventSummary));
-      tRow.append($('<td>').text(allGoogleCalEvents[i].description));
+        tRow.append($('<td>').text(allGoogleCalEvents[i].eventSummary));
+        tRow.append($('<td>').text(allGoogleCalEvents[i].description));
 
-      var googleCalEventFormat = 'YYYY-MM-DDTHH:mm:ssZ';
-      var displayFormat = 'MM/DD/YY, h:mm A';
-      var formattedStartDate = moment(allGoogleCalEvents[i].eventStart, googleCalEventFormat).format(displayFormat);
-      //console.log('formattedDate: ' + formattedDate);
-      var eventStartDate = moment(allGoogleCalEvents[i].eventStart, googleCalEventFormat);
-      tRow.append($('<td>').text(formattedStartDate));
-      var formattedEndDate = moment(allGoogleCalEvents[i].eventEnd, googleCalEventFormat).format(displayFormat);
-      var eventEndDate = moment(allGoogleCalEvents[i].eventEnd, googleCalEventFormat);
+        var googleCalEventFormat = 'YYYY-MM-DDTHH:mm:ssZ';
+        var displayFormat = 'MM/DD/YY, h:mm A';
+        var formattedStartDate = moment(allGoogleCalEvents[i].eventStart, googleCalEventFormat).format(displayFormat);
+        //console.log('formattedDate: ' + formattedDate);
+        var eventStartDate = moment(allGoogleCalEvents[i].eventStart, googleCalEventFormat);
+        tRow.append($('<td>').text(formattedStartDate));
+        var formattedEndDate = moment(allGoogleCalEvents[i].eventEnd, googleCalEventFormat).format(displayFormat);
+        var eventEndDate = moment(allGoogleCalEvents[i].eventEnd, googleCalEventFormat);
 
-      var eventDuration = eventEndDate.diff(eventStartDate,'hours');
-      //console.log('eventDuration: ' + eventDuration);
-      if(eventDuration < 1 || eventDuration > 24)
-        eventDuration = 1;
+        var eventDuration = eventEndDate.diff(eventStartDate,'hours');
+        //console.log('eventDuration: ' + eventDuration);
+        if(eventDuration < 1 || eventDuration > 24)
+          eventDuration = 1;
 
-      tRow.append($('<td>').text(formattedEndDate));
-      tRow.append($('<td>').append(
-          $('<button>').attr('class', 'btn btn-primary').text('Add Event').click(
-            
-          (function(eventTitleFull, eventDescriptionFull,eventStartDate, eventDuration){
-              return function(){
-                $('#syncedCalsModal').modal('hide');
-                $('#addEvent').modal('show');
+        tRow.append($('<td>').text(formattedEndDate));
+        tRow.append($('<td>').append(
+            $('<button>').attr('class', 'btn btn-primary').text('Add Event').click(
+              
+            (function(eventTitleFull, eventDescriptionFull,eventStartDate, eventDuration){
+                return function(){
+                  $('#syncedCalsModal').modal('hide');
+                  $('#addEvent').modal('show');
 
-                //Replace variable values in the addevent modal
-                $('#eventTitle').val(eventTitleFull);
-                $('#eventDescription').val(eventDescriptionFull);
+                  //Replace variable values in the addevent modal
+                  $('#eventTitle').val(eventTitleFull);
+                  $('#eventDescription').val(eventDescriptionFull);
 
-                //Retrieve the start date, start time , and attemp duration
-                //if duration is greater than 24 then set it equal to 24
-                var resultHash = deconstructTime(eventStartDate);
-                $('#eventStartingDate').val(resultHash['date']);
-                $('#eventStartHour').val(resultHash['hour']);
-                $('#eventStartMinute').val(resultHash['minute']);
-                $('#eventStartAmOrPM').val(resultHash['amorpm']);
-                $('#eventDuration').val(eventDuration);
+                  //Retrieve the start date, start time , and attemp duration
+                  //if duration is greater than 24 then set it equal to 24
+                  var resultHash = deconstructTime(eventStartDate);
+                  $('#eventStartingDate').val(resultHash['date']);
+                  $('#eventStartHour').val(resultHash['hour']);
+                  $('#eventStartMinute').val(resultHash['minute']);
+                  $('#eventStartAmOrPM').val(resultHash['amorpm']);
+                  $('#eventDuration').val(eventDuration);
 
-              };
-          })(eventTitleFull, eventDescriptionFull, eventStartDate, eventDuration)
-      )));
+                };
+            })(eventTitleFull, eventDescriptionFull, eventStartDate, eventDuration)
+        )));
 
-      tBody.append(tRow);
-    }
+        tBody.append(tRow);
+      }
 
-    googleCalEventsTbl.append(tBody);
-    $('#googleCalEventsModalBody').append(googleCalEventsTbl);
-  
+      googleCalEventsTbl.append(tBody);
+      $('#googleCalEventsModalBody').append(googleCalEventsTbl);
   }
 }
 
 //Reformat and display the users events after retrieving them from facebook
-function fbEventsInitializer(fbEventsJSONValue){
+function fbEventsInitializer(fbParsedJSON){
+    //console.log(fbEventsJSONValue);
+    var fbEventsObj = fbParsedJSON.allFbEventsProcessed;
+    var campusSynergyUsername = fbParsedJSON.campusSynergyUsername;
 
-  if(fbEventsJSONValue === null || fbEventsJSONValue ===''){
-    console.log('fbEventsJSONValue is null');
-  }else{
-    console.log(fbEventsJSONValue);
-    var fbEventsObj = $.parseJSON(fbEventsJSONValue);
-    var headerVals = ['Event Title', 'Event Description', 'Start Time', 'End Time', 'Add Event'];
-    var fbTable = $('<table>');
-    var tblHeader = $('<thead>');
-    var tblBody = $('<tbody>');
-    var tblHeaderRow = $('<tr>');
+    var cookieUsername = 
+      $.parseJSON(CampusSynergyCookieManipulator.getCookie('campusSynergyUsername').trim()).username;
 
-    for(var i = 0; i < headerVals.length; i++){
-      tblHeaderRow.append($('<td>').text(headerVals[i]));
-    }      
+    if(campusSynergyUsername === cookieUsername){
+      var headerVals = ['Event Title', 'Event Description', 'Start Time', 'End Time', 'Add Event'];
+      var fbTable = $('<table>');
+      var tblHeader = $('<thead>');
+      var tblBody = $('<tbody>');
+      var tblHeaderRow = $('<tr>');
 
-    tblHeader.append($('<tr>').append($('<td>').html('<b>Facebook Events</b>')));
-    tblHeader.append(tblHeaderRow);
-    fbTable.append(tblHeader);
+      for(var i = 0; i < headerVals.length; i++){
+        tblHeaderRow.append($('<td>').text(headerVals[i]));
+      }      
 
-    for(var f in fbEventsObj){
-      var fObj = fbEventsObj[f];
-      var eventTitle = '';
-      var eventDescription = '';
-      var eventStartTime = '';
-      var eventTitleFull ='';
-      var eventDescriptionFull='';
-      var tblRow = $('<tr>');
+      tblHeader.append($('<tr>').append($('<td>').html('<b>Facebook Events</b>')));
+      tblHeader.append(tblHeaderRow);
+      fbTable.append(tblHeader);
 
-      if(typeof fObj['name'] !== 'undefined'){
-        eventTitle = fObj['name'];
-        eventTitleFull = eventTitle;
+      for(var f in fbEventsObj){
+        var fObj = fbEventsObj[f];
+        var eventTitle = '';
+        var eventDescription = '';
+        var eventStartTime = '';
+        var eventTitleFull ='';
+        var eventDescriptionFull='';
+        var tblRow = $('<tr>');
+
+        if(typeof fObj['name'] !== 'undefined'){
+          eventTitle = fObj['name'];
+          eventTitleFull = eventTitle;
+        }
+
+        if(typeof fObj['description'] !== 'undefined'){
+          eventDescription = fObj['description'];
+          eventDescriptionFull = eventDescription;
+        }
+
+        if(typeof fObj['start_time'] !== 'undefined')
+          eventStartTime = fObj['start_time'];
+
+        if(eventTitle.length > 20)
+          eventTitle = eventTitle.substr(0,20) + '...';
+
+        if(eventDescription.length > 20)
+          eventDescription = eventDescription.substr(0,20) + '...';
+
+        tblRow.append($('<td>').text(eventTitle));
+        tblRow.append($('<td>').text(eventDescription));
+
+        var fbEventFormat = 'YYYY-MM-DDTHH:mm:ssZ';
+        var displayFormat = 'MM/DD/YY, h:mm A';
+        var momentDateStart = moment(eventStartTime, fbEventFormat);
+        var formattedDate = momentDateStart.format(displayFormat);
+        var endDate = moment(eventStartTime, fbEventFormat).add('hours', 1).format(displayFormat);
+
+        tblRow.append($('<td>').text(formattedDate));
+        tblRow.append($('<td>').text(endDate));
+        tblRow.append($('<td>').append(
+            $('<button>').attr('class', 'btn btn-primary').text('Add Event').click(
+              
+            (function(eventTitleFull, eventDescriptionFull, momentDateStart){
+                return function(){
+                  $('#syncedCalsModal').modal('hide');
+                  $('#addEvent').modal('show');
+
+                  //Replace variable values in the addevent modal
+                  $('#eventTitle').val(eventTitleFull);
+                  $('#eventDescription').val(eventDescriptionFull);
+
+                  //return value: {'date':'', 'hour':'', 'minute':'', 'amorpm':''};
+                  var resultHash = deconstructTime(momentDateStart);
+                  $('#eventStartingDate').val(resultHash['date']);
+                  $('#eventStartHour').val(resultHash['hour']);
+                  $('#eventStartMinute').val(resultHash['minute']);
+                  $('#eventStartAmOrPM').val(resultHash['amorpm']);
+
+                };
+            })(eventTitleFull, eventDescriptionFull, momentDateStart)
+        )));
+        tblBody.append(tblRow);
       }
+      fbTable.append(tblBody);
 
-      if(typeof fObj['description'] !== 'undefined'){
-        eventDescription = fObj['description'];
-        eventDescriptionFull = eventDescription;
-      }
-
-      if(typeof fObj['start_time'] !== 'undefined')
-        eventStartTime = fObj['start_time'];
-
-      if(eventTitle.length > 20)
-        eventTitle = eventTitle.substr(0,20) + '...';
-
-      if(eventDescription.length > 20)
-        eventDescription = eventDescription.substr(0,20) + '...';
-
-      tblRow.append($('<td>').text(eventTitle));
-      tblRow.append($('<td>').text(eventDescription));
-
-      var fbEventFormat = 'YYYY-MM-DDTHH:mm:ssZ';
-      var displayFormat = 'MM/DD/YY, h:mm A';
-      var momentDateStart = moment(eventStartTime, fbEventFormat);
-      var formattedDate = momentDateStart.format(displayFormat);
-      var endDate = moment(eventStartTime, fbEventFormat).add('hours', 1).format(displayFormat);
-
-      tblRow.append($('<td>').text(formattedDate));
-      tblRow.append($('<td>').text(endDate));
-      tblRow.append($('<td>').append(
-          $('<button>').attr('class', 'btn btn-primary').text('Add Event').click(
-            
-          (function(eventTitleFull, eventDescriptionFull, momentDateStart){
-              return function(){
-                $('#syncedCalsModal').modal('hide');
-                $('#addEvent').modal('show');
-
-                //Replace variable values in the addevent modal
-                $('#eventTitle').val(eventTitleFull);
-                $('#eventDescription').val(eventDescriptionFull);
-
-                //return value: {'date':'', 'hour':'', 'minute':'', 'amorpm':''};
-                var resultHash = deconstructTime(momentDateStart);
-                $('#eventStartingDate').val(resultHash['date']);
-                $('#eventStartHour').val(resultHash['hour']);
-                $('#eventStartMinute').val(resultHash['minute']);
-                $('#eventStartAmOrPM').val(resultHash['amorpm']);
-
-              };
-          })(eventTitleFull, eventDescriptionFull, momentDateStart)
-      )));
-      tblBody.append(tblRow);
+      $('#fbCalEventsModalBody').append(fbTable);
     }
-    fbTable.append(tblBody);
-
-    $('#fbCalEventsModalBody').append(fbTable);
-
-  }
 }
 
 $(function(){
+
+  //document.cookie='username=Test';
 
   $('#loggedInNavBar').hide();
   $('#listViewDiv').hide();
@@ -266,29 +290,62 @@ $(function(){
   if(currentUser){
     $('#notLoggedInNavBar').hide();
     $('#loggedInNavBar').show();
-  }
+    var fbEventsJSONValue = $('#fbEventsJSON').val();
+    var googleCalJSONValue = $('#googleCalJSON').val();
 
-  var fbEventsJSONValue = $('#fbEventsJSON').val();
-  var googleCalJSONValue = $('#googleCalJSON').val();
+    var numFbEvents = 0;
+    var numGoogleCalEvents = 0;
+    //Check the username property in the synced events JSON
+    //and if they don't match then reset the values
+    //It also compares the values again in the functions
+    var cookieUsername = 
+      $.parseJSON(CampusSynergyCookieManipulator.getCookie('campusSynergyUsername').trim()).username;
+      
+    //console.log('googleCalJSONValue: '+googleCalJSONValue);
+    if(googleCalJSONValue && googleCalJSONValue !==''){
+      var googleParsedJSON = $.parseJSON(googleCalJSONValue);
+      var googleCalEventsObj=googleParsedJSON.googleJsonData;
 
-  googleCalInitializer(googleCalJSONValue);
-  fbEventsInitializer(fbEventsJSONValue);
+      for(var g in googleCalEventsObj){
+        numGoogleCalEvents += googleCalEventsObj[g].cal_events.length;
+      }
+      if(cookieUsername !== googleParsedJSON.campusSynergyUsername){
+        //console.log('cookie and thing dont match');
+        googleCalJSONValue=null;
+        $('#googleCalJSON').val('');
+      }else{
+        googleCalInitializer(googleParsedJSON);
+      }
+    }
 
-  //Check that if either the google json or facebook json is null
-  if(fbEventsJSONValue || googleCalJSONValue){
-    $('#syncedCalsModal').modal('show');
-    var addEventModal = $('#addEvent.modal-footer');
+    if(fbEventsJSONValue && fbEventsJSONValue !== ''){
+      var fbParsedJSON = $.parseJSON(fbEventsJSONValue);
+      numFbEvents = fbParsedJSON.allFbEventsProcessed.length;
+      if(cookieUsername !== fbParsedJSON.campusSynergyUsername){
+        //console.log(fbEventsJSONValue);
+        fbEventsJSONValue=null;
+        $('#fbEventsJSON').val('');
+      }else{
+        fbEventsInitializer(fbParsedJSON);
+      }
+    }
 
-    //Add a button in the add events to see the synced events
-    var mySyncedEventsBtn 
-      = $('<button>').attr('class', 'btn btn-primary').text('Synced Events').click(
-        function(){
-          //console.log('Synced Events Btn clicked.');
-          $('.modal').modal('hide');
-          $('#syncedCalsModal').modal('show');
-        });
+    //Check that if either the google json or facebook json is not null
+    if( (fbEventsJSONValue !== null && numFbEvents > 0) || (googleCalJSONValue !== null && numGoogleCalEvents>0)){
+      $('#syncedCalsModal').modal('show');
+      var addEventModal = $('#addEvent.modal-footer');
+      //Add a button in the add events to see the synced events
+      var mySyncedEventsBtn 
+        = $('<button>').attr('class', 'btn btn-primary').text('Synced Events').click(
+          function(){
+            //console.log('Synced Events Btn clicked.');
+            $('.modal').modal('hide');
+            $('#syncedCalsModal').modal('show');
+          });
 
-    $('#addEventsFooter').append(mySyncedEventsBtn);
+      $('#addEventsFooter').append(mySyncedEventsBtn);
+    }
+
   }
 
 });
@@ -323,20 +380,6 @@ $('#contactUs').click(function(){
   var formData = {'contactUsSubject': contactUsSubject, 
   'contactUsFromEmail':contactUsFromEmail,
   'contactUsBody':contactUsBody};
-  
-  /*
-  $.ajax({
-    url:'/sendemail',
-    type: 'POST',
-    data: formData,
-    success: function(data, textStatus, response){
-        console.log('response: ' + response);
-    },
-    error: function(response, textStatus, errorThrown){
-
-    }
-  });
-  */
 
 });
 
@@ -348,6 +391,7 @@ $('#logoutBtn').click(function(){
     $('.modal').modal('hide');
     $('#notLoggedInNavBar').show();
     $('#loggedInNavBar').hide();
+    CampusSynergyCookieManipulator.deleteCookie('campusSynergyUsername');
   }
 
 });
@@ -405,8 +449,16 @@ $('#listViewBtn').click(function(){
             eTable.append($('<tr>').append($('<td>').text("Description: ")).append($('<td>').text(anEvent['longDescription'])));
             eTable.append($('<tr>').append($('<td>').text("Creator: ")).append($('<td>').text(anEvent['publisher'])));
 
-            $('#moreEventsHeader').html( '<h4>' + 'Event: ' + anEvent['title'] + '</h4>');
-            $('#moreEventsBody').html(eTable);
+            //Don't use .html it will cause script injection 
+            //$('#moreEventsHeader').html( '<h4>' + 'Event: ' + anEvent['title'] + '</h4>');
+            //$('#moreEventsBody').html(eTable);
+
+            $('#moreEventsHeader').empty();
+            $('#moreEventsBody').empty();
+
+            $('#moreEventsHeader').append($('<h4>').text('Event: ' + anEvent['title']));
+            $('#moreEventsBody').append(eTable);
+
             $('#moreEventsModal').modal('show');
 
           }); 
@@ -578,6 +630,12 @@ $('#loginBtn').click(function(){
           var successTbl = $('<table>').append($('<tr>').append($('<td>').text('Login Success!')));
           var successDiv = $('<div>').attr('class', 'alert alert-success').append(successTbl);
           //$('#loginResult').html(successDiv);
+
+          //setCookie: function(cname,cvalue,exdays)
+          CampusSynergyCookieManipulator.setCookie('campusSynergyUsername',
+            JSON.stringify({'username':user.get('username')}),1);
+
+          //document.cookie=JSON.stringify({'username':user.get('username')});
 
           $('.modal').modal('hide');
           $('#notLoggedInNavBar').hide();
@@ -809,6 +867,15 @@ function initialize() {
                     var eventsList = aPolygon.polygonPrpty['eventsList'];
                     var tBody = $('<tbody>');
                     for(var i = 0; i < eventsList.length; i++){
+
+                      if(eventsList[i]['title'].length > 15){
+                        eventsList[i]['title']=eventsList[i]['title'].substr(0,15) +'...';
+                      }
+
+                      if(eventsList[i]['roomString'].length > 15){
+                        eventsList[i]['roomString']=eventsList[i]['roomString'].substr(0,15)+'...';
+                      }
+
                       var aRow = $('<tr>');
                       aRow.append($('<td>').text(eventsList[i]['title']));
                       aRow.append($('<td>').text(eventsList[i]['roomString']));
@@ -840,9 +907,15 @@ function initialize() {
                         eTable.append($('<tr>').append($('<td>').text("Description: ")).append($('<td>').text(anEvent['longDescription'])));
                         eTable.append($('<tr>').append($('<td>').text("Creator: ")).append($('<td>').text(anEvent['publisher'])));
 
-                        $('#moreEventsHeader').html( '<h4>' + 'Event: ' + anEvent['title'] + '</h4>');
-                        $('#moreEventsBody').html(eTable);
+
+                        //$('#moreEventsHeader').html( '<h4>' + 'Event: ' + anEvent['title'] + '</h4>');
+                        $('#moreEventsHeader').empty();
+                        $('#moreEventsBody').empty();
+
+                        $('#moreEventsHeader').append($('<h4>').text('Event: '+anEvent['title']));
+                        $('#moreEventsBody').append(eTable);
                         $('#moreEventsModal').modal('show');
+
                       }); 
 
                       aRow.append($('<td>').append(button));
@@ -852,8 +925,15 @@ function initialize() {
                     eventsTable.append(tHead);
                     eventsTable.append(tBody);
 
-                    $('#overlayEventsListHeader').html('<h4>' + 'Events for ' + aPolygon.polygonPrpty['bldName'] + '</h4>');
-                    $('#overlayEventsListBody').html(eventsTable);
+                    //$('#overlayEventsListHeader').html('<h4>' + 'Events for ' + aPolygon.polygonPrpty['bldName'] + '</h4>');
+                    //$('#overlayEventsListBody').html(eventsTable);
+
+                    $('#overlayEventsListHeader').empty();
+                    $('#overlayEventsListBody').empty();
+
+                    $('#overlayEventsListHeader').append($('<h4>').text('Events for ' + aPolygon.polygonPrpty['bldName']));
+                    $('#overlayEventsListBody').append(eventsTable);
+
                     $('#overlayEventsList').modal('show');
 
                 });
