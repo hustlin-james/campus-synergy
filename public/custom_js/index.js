@@ -2,7 +2,7 @@ Parse.initialize("QuoI3WPv5g9LyP4awzhZEH8FvRKIgWgFEdFJSTmB", "lsdwkYQTwv0mTcFQWv
 
 $('#forgotPwEmailBtn').click(function(){
   var forgotPwEmail = $('#forgotPwEmail').val();
-  console.log('email: '+ forgotPwEmail);
+  //console.log('email: '+ forgotPwEmail);
 
   var errorsAry = [];
   if(forgotPwEmail === '' || forgotPwEmail === null){
@@ -142,6 +142,7 @@ function googleCalInitializer(googleParsedJSON){
         var formattedStartDate = moment(allGoogleCalEvents[i].eventStart, googleCalEventFormat).format(displayFormat);
         //console.log('formattedDate: ' + formattedDate);
         var eventStartDate = moment(allGoogleCalEvents[i].eventStart, googleCalEventFormat);
+        //console.log('eventStartData: '+eventStartDate);
         tRow.append($('<td>').text(formattedStartDate));
         var formattedEndDate = moment(allGoogleCalEvents[i].eventEnd, googleCalEventFormat).format(displayFormat);
         var eventEndDate = moment(allGoogleCalEvents[i].eventEnd, googleCalEventFormat);
@@ -419,13 +420,25 @@ $('#listViewBtn').click(function(){
           eventsRow.append($('<td>').text(results[i].get('bldName')));
           eventsRow.append($('<td>').text(results[i].get('roomString')));
           var parseDate = results[i].get('date').toLocaleString();
+          //There may be browsers formatting the date string differently....
           //localteString: Sat Dec 21 08:00:00 2013
           //ddd MMM DD HH:mm:ss YYYY
+
+          //Safari:
+          //parseDate: January 23, 2014 at 5:07:52 PM CST (index.js, line 426)
+          //MMMM DD, YYYY at H:mm:ss A z
+
           var parseDateFormat = 'ddd MMM DD HH:mm:ss YYYY';
           var displayFormat = 'dddd, MMMM Do YYYY, h:mm:ss A';
-          var formattedDate = moment(parseDate, parseDateFormat).format(displayFormat);
+          var startDate = moment(parseDate, parseDateFormat).format(displayFormat);
 
-          eventsRow.append($('<td>').text(formattedDate));
+          //Try to parse the date in a different format
+          if(startDate === 'Invalid date'){
+            var safariDateFormat = 'MMMM DD, YYYY at HH:mm:ss A z';
+            startDate = moment(parseDate, safariDateFormat).format(displayFormat);
+          }
+
+          eventsRow.append($('<td>').text(startDate));
           eventsRow.append($('<td>').text(results[i].get('duration')));
 
           var objectId = results[i].id;
@@ -439,29 +452,33 @@ $('#listViewBtn').click(function(){
           anEvent['publisher'] = results[i].get('publisher');
           anEvent['title'] = results[i].get('title');
 
-          button.click(function(){
-            var eTable = $('<table>');
+          function eventsAppend(anEvent){
+            return function(){
+              var eTable = $('<table>');
             
-            eTable.append($('<tr>').append($('<td>').text("Room Number: ")).append($('<td>').text(anEvent['roomString'])));
-            eTable.append($('<tr>').append($('<td>').text("Building: ")).append($('<td>').text(anEvent['bldName'])));
-            eTable.append($('<tr>').append($('<td>').text("Start Time: ")).append($('<td>').text(formattedDate)));
-            eTable.append($('<tr>').append($('<td>').text("Duration: ")).append($('<td>').text(anEvent['duration'])));
-            eTable.append($('<tr>').append($('<td>').text("Description: ")).append($('<td>').text(anEvent['longDescription'])));
-            eTable.append($('<tr>').append($('<td>').text("Creator: ")).append($('<td>').text(anEvent['publisher'])));
+              eTable.append($('<tr>').append($('<td>').text("Room Number: ")).append($('<td>').text(anEvent['roomString'])));
+              eTable.append($('<tr>').append($('<td>').text("Building: ")).append($('<td>').text(anEvent['bldName'])));
+              eTable.append($('<tr>').append($('<td>').text("Start Time: ")).append($('<td>').text(startDate)));
+              eTable.append($('<tr>').append($('<td>').text("Duration: ")).append($('<td>').text(anEvent['duration'])));
+              eTable.append($('<tr>').append($('<td>').text("Description: ")).append($('<td>').text(anEvent['longDescription'])));
+              eTable.append($('<tr>').append($('<td>').text("Creator: ")).append($('<td>').text(anEvent['publisher'])));
 
-            //Don't use .html it will cause script injection 
-            //$('#moreEventsHeader').html( '<h4>' + 'Event: ' + anEvent['title'] + '</h4>');
-            //$('#moreEventsBody').html(eTable);
+              //Don't use .html it will cause script injection 
+              //$('#moreEventsHeader').html( '<h4>' + 'Event: ' + anEvent['title'] + '</h4>');
+              //$('#moreEventsBody').html(eTable);
 
-            $('#moreEventsHeader').empty();
-            $('#moreEventsBody').empty();
+              $('#moreEventsHeader').empty();
+              $('#moreEventsBody').empty();
 
-            $('#moreEventsHeader').append($('<h4>').text('Event: ' + anEvent['title']));
-            $('#moreEventsBody').append(eTable);
+              $('#moreEventsHeader').append($('<h4>').text('Event: ' + anEvent['title']));
+              $('#moreEventsBody').append(eTable);
 
-            $('#moreEventsModal').modal('show');
+              $('#moreEventsModal').modal('show');
+            }
+          }
 
-          }); 
+          button.click(eventsAppend(anEvent)); 
+
           eventsRow.append($('<td>').append(button));
           eventsBody.append(eventsRow);
         }
@@ -472,7 +489,7 @@ $('#listViewBtn').click(function(){
         $('#listViewDiv').show();
     },
     error: function(error){
-      console.log('error: ' + error.description);
+      //console.log('error: ' + error.description);
     }
   });
 
@@ -549,7 +566,7 @@ $('#addEventBtn').click(function(){
       var CampusEvent = Parse.Object.extend('campus_synergy');
       var campusEvent = new CampusEvent();
 
-      console.log('campusEvent: ' + campusEvent);
+      //console.log('campusEvent: ' + campusEvent);
       campusEvent.set('bldName', eventBuilding);
       //campusEvent.set('date', momentStartingTime);
       campusEvent.set('date', new Date(startingTimeString));
@@ -626,7 +643,7 @@ $('#loginBtn').click(function(){
       success: function(user){
 
         if(user.get("emailVerified")){
-          console.log("success");
+          //console.log("success");
           var successTbl = $('<table>').append($('<tr>').append($('<td>').text('Login Success!')));
           var successDiv = $('<div>').attr('class', 'alert alert-success').append(successTbl);
           //$('#loginResult').html(successDiv);
@@ -642,7 +659,7 @@ $('#loginBtn').click(function(){
           $('#loggedInNavBar').show();
 
         }else{
-          console.log("user is not verified");
+          //console.log("user is not verified");
 
           textAry = new Array();
           textAry.push("Please verify your email address by logging into your email, and look for the subject that contains" +
@@ -675,10 +692,15 @@ $('#signupBtn').click(function(){
   var allGood = true;
   var textAry = new Array();
 
+  var signupUsername = $('#signupUsername').val();
   var signupEmail = $('#signupEmail').val();
   var signupPass = $('#signupPass').val();
   var vSignupPass = $('#vSignupPass').val();
   var orgSignupDescrip = $('#orgSignupDescrip').val();
+
+  if(signupUsername === null || signupUsername === ''){
+    textAry.push('Please enter an username');
+  }
 
   if(signupEmail == null || signupEmail==''){
     textAry.push('Please enter an email');
@@ -703,8 +725,16 @@ $('#signupBtn').click(function(){
   $('#signupResult').empty();
   if(allGood){
 
+    function resetAllSignupFields(){
+      $('#signupUsername').val('');
+      $('#signupEmail').val('');
+      $('#signupPass').val('');
+      $('#vSignupPass').val('');
+      $('#orgSignupDescrip').val('');
+    }
+
     var user = new Parse.User();
-    user.set("username",signupEmail);
+    user.set("username",signupUsername);
     user.set("password", signupPass);
     user.set("email", signupEmail);
     user.set("orgDescrip", orgSignupDescrip);
@@ -718,6 +748,8 @@ $('#signupBtn').click(function(){
         var successTbl = $('<table>').append($('<tr>').append($('<td>').text('Signup Successful! Please check your email to activate your account.')));
         var successDiv = $('<div>').attr('class', 'alert alert-success').append(successTbl);
         $('#signupResult').append(successDiv);
+
+        resetAllSignupFields();
 
       }, 
       error: function(user, error){
@@ -762,6 +794,28 @@ function initialize() {
         success: function(results){
           $.getJSON('/buildings_json', function(data){
 
+            //return true if eventtime is less than now
+            function checkIfEventTimeLessThanNow(eventTime){
+               var now = moment();
+               var parseDateFormat = 'ddd MMM DD HH:mm:ss YYYY';
+               var displayFormat = 'MM-DD-YYYY, h:mm:ss A';
+               var testForInvalid = moment(eventTime.toLocaleString(), parseDateFormat).format(displayFormat);
+               var parseMomentDate = moment(eventTime.toLocaleString(), parseDateFormat);
+               console.log('parseMomentDate: '+ parseMomentDate);
+              
+               if(testForInvalid === 'Invalid date'){
+                 var safariDateFormat = 'MMMM DD, YYYY at HH:mm:ss A z';
+                 parseMomentDate = moment(eventTime.toLocaleString(), safariDateFormat);
+                 console.log('parseMomentDate safari: '+parseMomentDate);
+               }
+
+               if(parseMomentDate.isBefore(now)){
+                console.log('true');
+                return true;
+               }
+               return false;
+            }
+
             var buildingsJSONHash = {};
 
             for(var i=0; i < data.length; i++){
@@ -781,7 +835,7 @@ function initialize() {
                   var aHash = {};
                   aHash['coordinates'] = coordinates;
                   mapOverlayHash[results[i].get('bldName')] = aHash;
-                  console.log('coordinates: ' + mapOverlayHash[results[i].get('bldName')]);
+                  //console.log('coordinates: ' + mapOverlayHash[results[i].get('bldName')]);
                 }
 
                 if(mapOverlayHash[results[i].get('bldName')]['bldEventsArray'] == null){
@@ -797,8 +851,10 @@ function initialize() {
                   eventHash['title'] = results[i].get('title');
                   eventHash['bldName'] = results[i].get('bldName');
 
-                  eventsArray.push(eventHash);
-                  console.log(mapOverlayHash[results[i].get('bldName')]);
+                  //if date is less than current time then don't add it
+                  if(!checkIfEventTimeLessThanNow(eventHash['date'])){
+                    eventsArray.push(eventHash);
+                  }
                   mapOverlayHash[results[i].get('bldName')]['bldEventsArray'] = eventsArray;
                 }else{
                   var eventHash = {};
@@ -810,11 +866,23 @@ function initialize() {
                   eventHash['roomString'] = results[i].get('roomString');
                   eventHash['title'] = results[i].get('title');
                   eventHash['bldName'] = results[i].get('bldName');
-                  mapOverlayHash[results[i].get('bldName')]['bldEventsArray'].push(eventHash);
+
+                  //if date is less than current time then don't add it
+                  if(!checkIfEventTimeLessThanNow(eventHash['date'])){
+                    mapOverlayHash[results[i].get('bldName')]['bldEventsArray'].push(eventHash);
+                  }
                 }
              
               }
             }
+
+            //Check the mapOverlayHash for buildings that have 0 events after being processed
+            for(var bld in mapOverlayHash){
+              if(mapOverlayHash[bld].bldEventsArray.length === 0){
+                delete mapOverlayHash[bld];
+              }
+            }
+
            
             //myValues is a Hash that contains, {'coordinates':anArray, 'bldEventsArray':eventsArrayHash}
             $.each(mapOverlayHash, function(key, myValues){
@@ -865,6 +933,7 @@ function initialize() {
                     tHead.append(tHeadRow);
 
                     var eventsList = aPolygon.polygonPrpty['eventsList'];
+                    console.log(eventsList);
                     var tBody = $('<tbody>');
                     for(var i = 0; i < eventsList.length; i++){
 
@@ -884,6 +953,11 @@ function initialize() {
                       var displayFormat = 'MM-DD-YYYY, h:mm:ss A';
                       var formattedDate = moment(eventsList[i]['date'].toLocaleString(), parseDateFormat).format(displayFormat); 
                       
+                      if(formattedDate === 'Invalid date'){
+                        var safariDateFormat = 'MMMM DD, YYYY at HH:mm:ss A z';
+                        formattedDate = moment(eventsList[i]['date'].toLocaleString(), safariDateFormat).format(displayFormat); 
+                      }
+
                       aRow.append($('<td>').text(formattedDate));
 
                       aRow.append($('<td>').text(eventsList[i]['duration']));

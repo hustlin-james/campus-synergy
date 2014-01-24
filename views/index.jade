@@ -27,14 +27,14 @@
 			.modal-body
 				.form-horizontal(role='form')
 					.form-group
-						label.col-sm-2.control-label(for='loginEmail') Email
+						label.col-sm-2.control-label(for='loginEmail') Username
 						.col-sm-10
 							input.form-control#loginEmail(type='email' placeholder='Email')
 					.form-group
 						label.col-sm-2.control-label(for='loginPass') Password
 						.col-sm-10
 							input.form-control#loginPass(type='password' placeholder='Password')
-				a(href='#forgotPwModal' data-toggle='modal') Forgot Password
+				a(href='#forgotPwModal' data-toggle='modal') Forgot Password/Username
 			.modal-footer
 				button.btn.btn-primary#loginBtn Log in
 				button.btn.btn-default(data-dismiss='modal') Close
@@ -103,6 +103,10 @@
 				#signupResult
 			.modal-body
 				.form-horizontal(role='form')
+					.form-group
+						label.col-sm-2.control-label(for='signupUsername') Username
+						.col-sm-10
+							input.form-control#signupUsername(type='text' placeholder='username')
 					.form-group
 						label.col-sm-2.control-label(for='signupEmail') Email
 						.col-sm-10
@@ -226,7 +230,7 @@
 			.modal-body
 				#overlayEventsListBody
 			.modal-footer
-				button.btn.btn-primary#addEventInOverlay Add Event
+				//button.btn.btn-primary#addEventInOverlay Add Event
 				button.btn.btn-default(data-dismiss='modal') Close
 
 #moreEventsModal.modal.fade(role='dialog')
